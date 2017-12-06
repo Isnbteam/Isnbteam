@@ -56,6 +56,7 @@ class Question(models.Model):
         (3, '评价'),
     )
     types = models.IntegerField(choices=question_types)
+    questionnaire=models.ForeignKey("Questionnaire",verbose_name="关联问卷",default=None)
     class Meta:
         verbose_name_plural="问题表"
     def __str__(self):

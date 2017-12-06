@@ -17,9 +17,6 @@ from django.conf.urls import url,include
 from django.contrib import admin
 from app import views
 urlpatterns = [
-    url(r'^admin/', admin.site.urls),
-    url(r'^login/', views.login),
-    url(r'^questionnaire/', views.questionnaire),
-    url(r'^question/', views.question),
-    url(r'^student/',include('app.urls'))
+    url(r'^(?P<username>.*)/(?P<grade_id>\d+)/edit/(?P<questionnaire_id>\d+)',views.edit_questionnaire),
+    url(r'^(?P<username>.*)/(?P<grade_id>\d+)/(?P<questionnaire_id>\d+)',views.see_questionnaire)
 ]
