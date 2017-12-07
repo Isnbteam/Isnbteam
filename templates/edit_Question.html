@@ -95,7 +95,7 @@ h3:before {
 <script src="https://cdn.bootcss.com/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
 <script>
 {#    选项改变#}
-$(".selector").change(function () {
+$(document).on("change",".selector",function () {
     var selectors=$(this).val();
     if (selectors == "2"){
         var netspan= '<span class="glyphicon glyphicon-plus addoption"style="color: #2e6da4;line-height: 28px">添加选项</span>';
@@ -103,11 +103,12 @@ $(".selector").change(function () {
             '<label class="col-sm-2 control-label">选项：</label> ' +
             '<div class="col-sm-10">'+
                 '<ul>' +
-                    ' <li>' +
+                    ' <li option_id="None">' +
+{#                    ' <li >' +#}
                     ' <label class="col-sm-2 control-label">内容：</label> ' +
-                    '<input type="text" class="col-sm-3" placeholder="内容"value="">'+
+                    '<input type="text" class="col-sm-3 content" placeholder="内容"value="">'+
                     '<label class="col-sm-2 control-label">分值：</label>' +
-                    ' <input type="text" class="col-sm-3" placeholder="分值" value=""> '+
+                    ' <input type="text" class="col-sm-3 score" placeholder="分值" value=""> '+
                     ' <span class="glyphicon glyphicon-remove" style="font-size: 18px;color: #cccccc;line-height: 28px;margin-left: 20px"></span> ' +
                     '</li> ' +
                  '</ul></div> </div> ';
@@ -123,31 +124,56 @@ $(".selector").change(function () {
 {#添加选项#}
 $(document).on("click",".addoption",function () {
         var options='<li>' +
-                    ' <label class="col-sm-2 control-label">内容：</label> ' +
-                    '<input type="text" class="col-sm-3" placeholder="内容">'+
+                    ' <label class="col-sm-2 control-label ">内容：</label> ' +
+                    '<input type="text" class="col-sm-3 content" placeholder="内容">'+
                     '<label class="col-sm-2 control-label">分值：</label>' +
-                    ' <input type="text" class="col-sm-3" placeholder="分值" > '+
-                    ' <span class="glyphicon glyphicon-remove" style="font-size: 18px;color: #cccccc;line-height: 28px;margin-left: 20px"></span> ' +
+                    ' <input type="text" class="col-sm-3 score" placeholder="分值" > '+
+                    ' <span class="glyphicon glyphicon-remove deloption" style="font-size: 18px;color: #cccccc;line-height: 28px;margin-left: 20px"></span> ' +
                     '</li>';
         $(this).parent().next().children().children().append(options)
     });
 {#删除问题#}
-$(".delquestion").on("click",function () {
+$(document).on("click",".delquestion",function () {
     $(this).parent().remove()
 });
 {#删除选项#}
-$(".deloption").on("click",function () {
+$(document).on("click",".deloption",function () {
     $(this).parent().remove()
 });
 {#添加问题#}
-$(".addquestion").on("click",function () {
-    $(".question:first").clone(true).appendTo($(".quest_list"));
-    $(".question:last").attr("quest_id","None");
-    $("textarea").last().val("");
-    $("select").last().val("1")
-});
+    $(document).on("click",".addquestion",function () {
+    ss=' <div class="question" quest_id="None" >'+
+        '<span class="glyphicon glyphicon-remove delquestion" style="line-height: 28px;float: right"></span>' +
+        ' <h3></h3>' +
+        '<div class="form-group">' +
+            ' <label class="col-sm-2 control-label">问题：</label>' +
+            ' <div class="col-sm-10">' +
+                ' <textarea class="form-control textarea" rows="2"placeholder="问题" ></textarea>'+
+             '</div>' +
+        ' </div>' +
+        ' <div class="form-group">' +
+            ' <label class="col-sm-2 control-label">类型：</label> ' +
+            '<div class="col-sm-6">' +
+                ' <select size="1" class="form-control selector" >' +
+                     ' <option selected value="1">打分</option>' +
+                    ' <option value="2">单选</option>' +
+                     '<option value="3">评价</option>' +
+                ' </select>' +
+            ' </div>' +
+        '</div>' +
+    ' </div>';
+    $(".quest_list").append(ss)
+    });
+{#    $(document).on("click",".addquestion",function () {#}
+{#        $(".question:first").clone(true).appendTo($(".quest_list"));#}
+{#        $(".question:last").attr("quest_id","None");#}
+{#        $("textarea").last().val("");#}
+{#        $("select").last().val("1");#}
+{#        $(".form-group").last().remove();#}
+{#        $(".addoption").last().remove();#}
+{#    });#}
 {#    保存#}
-$(".condtion").click(function () {
+$(document).on("click",".condtion",function () {
      quest_list=[];
     $(".quest_list>.question").each(function () {
          var questions_id=$(this).attr("quest_id");
@@ -155,7 +181,6 @@ $(".condtion").click(function () {
          var quest_type=$(this).find(".selector").val();
          options=[];
          if (quest_type == 2){
-
          $(this).find("li").each(function () {
 
              var opp_id=$(this).attr("option_id");

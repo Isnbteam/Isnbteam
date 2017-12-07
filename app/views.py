@@ -1,5 +1,6 @@
 from django.shortcuts import render,redirect,HttpResponse
 from app import models
+from django.db.models import Count
 import json
 from app.QuestionForm import QuestionForm
 # Create your views here.
@@ -45,6 +46,7 @@ def questionnaire(request):
             questionnaire_list=models.Questionnaire.objects.all()
             obj=Foo(questionnaire_list)
 
+
             return render(request, "Questionnaire.html",{"questionnaire_list":obj})
     else:
         return redirect("/login/")
@@ -65,12 +67,41 @@ def edit_questionnaire(request,username,grade_id,questionnaire_id):
         return render(request, "edit_Question.html",{"type_list":type_list,"question_list":question_list,"questionnaire":questionnaire})
     else:
         quest_list=json.loads(request.body.decode('utf-8'))
+        print(quest_list)
         for quest in quest_list:
-            if quest.get("optins"):
-                print("opthins",quest["opthins"])
+            questions_id = quest.get("questions_id")#问题id
+            quest_caption = quest.get("quest_caption")
+            quest_type = quest.get("quest_type")
+            options = quest.get("options")
+            # print(options)
+            if questions_id!="None":#如果是已有问题
+                if options:#如果有选项，即单选，type==2，见网页157行
+                        models.Question.objects.filter(id=questions_id).update(caption=quest_caption,types=quest_type)
+                        for i in options:
+            #                 {"opp_id":opp_id,"content":content,"score":score}
+                            opp_id=i.get("opp_id")#选项id
+                            content=i.get("content")
 
-            else:
-                print(quest)
+                            score=i.get("score")
+                            if opp_id :
+                                models.Option.objects.filter(id=opp_id).update(name=content,score=score)
+                            else:
+                                models.Option.objects.create(name=content,score=score,qs_id=questions_id)
+                else:
+                     models.Question.objects.filter(id=questions_id).update(caption=quest_caption,types=quest_type)
+            elif questions_id=="None":#新问题
+                if options:  # 如果有选项，即单选，type==2，见网页157行
+                    questions_obj=models.Question.objects.create(caption=quest_caption, types=quest_type,
+                                                   questionnaire_id=questionnaire_id)
+                    for i in options:
+                        # opp_id = i.get("opp_id")
+                        contents = i.get("content")
+                        scores= i.get("score")
+
+                        models.Option.objects.create(name=contents, score=scores, qs_id=questions_obj.id)
+                else:
+                    models.Question.objects.create(caption=quest_caption, types=int(quest_type),
+                                                   questionnaire_id=questionnaire_id)
         return HttpResponse("ok")
 def see_questionnaire(request,username,grade_id,questionnaire_id):
     """
