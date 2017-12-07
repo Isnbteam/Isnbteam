@@ -1,5 +1,6 @@
 from django.shortcuts import render,redirect,HttpResponse
 from app import models
+import json
 from app.QuestionForm import QuestionForm
 # Create your views here.
 def login(request):
@@ -61,8 +62,16 @@ def edit_questionnaire(request,username,grade_id,questionnaire_id):
             {"id":2,"type":"单选"},
             {"id":3,"type":"评价"},
         ]
-        return render(request, "edit_Question.html",{"type_list":type_list,"question_list":question_list})
-    else:pass
+        return render(request, "edit_Question.html",{"type_list":type_list,"question_list":question_list,"questionnaire":questionnaire})
+    else:
+        quest_list=json.loads(request.body.decode('utf-8'))
+        for quest in quest_list:
+            if quest.get("optins"):
+                print("opthins",quest["opthins"])
+
+            else:
+                print(quest)
+        return HttpResponse("ok")
 def see_questionnaire(request,username,grade_id,questionnaire_id):
     """
     问卷发布内容
