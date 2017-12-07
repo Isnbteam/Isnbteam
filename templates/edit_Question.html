@@ -4,8 +4,18 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/static/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <title>问卷调查</title>
+    <style>
+body {
+  counter-reset: section;           /* 重置计数器成0 */
+}
+h3:before {
+  counter-increment: section;      /* 增加计数器值 */
+  content: "问题 " counter(section) " : "; /* 显示计数器 */
+}
+</style>
 
 </head>
 
@@ -19,10 +29,12 @@
     <div class="row">
         <div class="col-md-10">
             <form class="form-horizontal">
-                <div class="col-md-10 col-lg-offset-2">
+                <div class="col-md-10 col-lg-offset-2" >
                     {% for obj in question_list %}
-                        <div class="question">
-                            <h3>问题<span class="num">{{ forloop.counter }}</span>:</h3>
+                        <div class="question" quest_id="{{ obj.id }}" >
+                                                        <span class="glyphicon glyphicon-remove" style="line-height: 28px;float: right"></span>
+
+                            <h3></h3>
                             <div class="form-group">
                                 <label class="col-sm-2 control-label">问题：</label>
                                 <div class="col-sm-10">
@@ -44,7 +56,7 @@
                                     </select>
                                 </div>
                                 {% if obj.types == 2 %}
-                                    <span class="glyphicon glyphicon-plus"
+                                    <span class="glyphicon glyphicon-plus addoption"
                                           style="color: #2e6da4;line-height: 28px">添加选项</span>
                                 {% endif %}
                             </div>
@@ -52,21 +64,19 @@
                                 <div class="form-group">
                                     <label class="col-sm-2 control-label">选项：</label>
                                     <div class="col-sm-10">
-
+                                    <ul>
                                         {% for option in obj.option_set.all %}
-                                            <ul>
+
                                                 <li>
                                                     <label class="col-sm-2 control-label">内容：</label>
-                                                    <input type="text" class="col-sm-3" placeholder="内容"
-                                                           value="{{ option.name }}">
+                                                    <input type="text" class="col-sm-3" placeholder="内容" value="{{ option.name }}">
                                                     <label class="col-sm-2 control-label">分值：</label>
-                                                    <input type="text" class="col-sm-3" placeholder="分值"
-                                                           value="{{ option.score }}">
-                                                    <span class="glyphicon glyphicon-remove"
-                                                          style="font-size: 18px;color: #cccccc;line-height: 28px;margin-left: 20px"></span>
+                                                    <input type="text" class="col-sm-3" placeholder="分值" value="{{ option.score }}">
+                                                    <span class="glyphicon glyphicon-remove" style="font-size: 18px;color: #cccccc;line-height: 28px;margin-left: 20px"></span>
                                                 </li>
-                                            </ul>
+
                                         {% endfor %}
+                                      </ul>
                                     </div>
                                 </div>
                             {% endif %}
@@ -85,12 +95,48 @@
 <script>
 $(".selector").change(function () {
     var selector=$(this).val();
-    console.log(selector);
     if (selector == "2"){
-      var netspan= '<span class="glyphicon glyphicon-plus"style="color: #2e6da4;line-height: 28px">添加选项</span>';
-      $(this).parent().parent().append(netspan);
-        console.log($(this).parent().next())
+        var netspan= '<span class="glyphicon glyphicon-plus addoption"style="color: #2e6da4;line-height: 28px">添加选项</span>';
+        var option='<div class="form-group"> ' +
+            '<label class="col-sm-2 control-label">选项：</label> ' +
+            '<div class="col-sm-10">'+
+                '<ul>' +
+                    ' <li>' +
+                    ' <label class="col-sm-2 control-label">内容：</label> ' +
+                    '<input type="text" class="col-sm-3" placeholder="内容"value="">'+
+                    '<label class="col-sm-2 control-label">分值：</label>' +
+                    ' <input type="text" class="col-sm-3" placeholder="分值" value=""> '+
+                    ' <span class="glyphicon glyphicon-remove" style="font-size: 18px;color: #cccccc;line-height: 28px;margin-left: 20px"></span> ' +
+                    '</li> ' +
+                 '</ul></div> </div> ';
+        $(this).parent().parent().append(netspan);
+        $(this).parent().parent().parent().append(option);
+    }else{
+        $(this).parent().next().remove();
+
     }
-})
+{#            $(".addoption").click(function () {#}
+{#        var options='<li>' +#}
+{#                    ' <label class="col-sm-2 control-label">内容：</label> ' +#}
+{#                    '<input type="text" class="col-sm-3" placeholder="内容">'+#}
+{#                    '<label class="col-sm-2 control-label">分值：</label>' +#}
+{#                    ' <input type="text" class="col-sm-3" placeholder="分值" > '+#}
+{#                    ' <span class="glyphicon glyphicon-remove" style="font-size: 18px;color: #cccccc;line-height: 28px;margin-left: 20px"></span> ' +#}
+{#                    '</li>';#}
+{#        $(this).parent().next().children().children().append(options)#}
+{#    })#}
+
+});
+$(document).on("click",".addoption",function () {
+        var options='<li>' +
+                    ' <label class="col-sm-2 control-label">内容：</label> ' +
+                    '<input type="text" class="col-sm-3" placeholder="内容">'+
+                    '<label class="col-sm-2 control-label">分值：</label>' +
+                    ' <input type="text" class="col-sm-3" placeholder="分值" > '+
+                    ' <span class="glyphicon glyphicon-remove" style="font-size: 18px;color: #cccccc;line-height: 28px;margin-left: 20px"></span> ' +
+                    '</li>';
+        $(this).parent().next().children().children().append(options)
+    })
+
 </script>
 </html>

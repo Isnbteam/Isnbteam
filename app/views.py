@@ -61,7 +61,7 @@ def edit_questionnaire(request,username,grade_id,questionnaire_id):
             {"id":2,"type":"单选"},
             {"id":3,"type":"评价"},
         ]
-        return render(request, "edit_Question.html",locals())
+        return render(request, "edit_Question.html",{"type_list":type_list,"question_list":question_list})
     else:pass
 def see_questionnaire(request,username,grade_id,questionnaire_id):
     """
