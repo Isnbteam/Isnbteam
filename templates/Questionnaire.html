@@ -30,9 +30,8 @@
                         <tr>
                         <td>{{ obj.caption }}</td>
                         <td>{{ obj.grade }}</td>
-
                         <td>
-                        {{ obj.question }}
+                        {{ obj.question_set.first.answer_set.all.count }}/{{ obj.grade.student_set.all.count }}
                             </td>
                         <td><a href="/student/{{ obj.creator.username }}/{{ obj.grade.id }}/edit/{{ obj.id }}">编辑问卷</a></td>
                         <td><a href="/student/{{ obj.creator.username }}/{{ obj.grade.id }}/{{ obj.id }}">/student/{{ obj.creator.username }}/{{ obj.grade.id }}/{{ obj.id }}</a></td>
@@ -42,7 +41,6 @@
                     {% endfor %}
 
                     </tbody>
-
 
                 </table>
 

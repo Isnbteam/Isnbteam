@@ -4,36 +4,50 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/static/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/sweet/sweetalert2.min.css">
     <title>问卷调查</title>
+    <style>
+body {
+  counter-reset: section;           /* 重置计数器成0 */
+}
+h3:before {
+  counter-increment: section;      /* 增加计数器值 */
+  content: "问题 " counter(section) " : "; /* 显示计数器 */
+}
+</style>
 
 </head>
 
 <body>
-<h1 class="text-center">问卷调查</h1>
+<h1 class="text-center">{{ questionnaire.caption }}</h1>
 <div class="container">
     <div class="pull-right">
-        <button class="btn btn-success">添加</button>
-        <button class="btn btn-info">保存</button>
+        <span class="error" style="color: darkred;font-size: 20px"></span>
+        <button class="btn btn-success addquestion">添加</button>
+        <button class="btn btn-info condtion">保存</button>
     </div>
     <div class="row">
         <div class="col-md-10">
             <form class="form-horizontal">
-                <div class="col-md-10 col-lg-offset-2">
+                <div class="col-md-10 col-lg-offset-2 quest_list" >
                     {% for obj in question_list %}
-                        <div class="question">
-                            <h3>问题<span class="num">{{ forloop.counter }}</span>:</h3>
+                        <div class="question" quest_id="{{ obj.id }}" >
+                            <span class="glyphicon glyphicon-remove delquestion" style="line-height: 28px;float: right"></span>
+
+                            <h3></h3>
                             <div class="form-group">
                                 <label class="col-sm-2 control-label">问题：</label>
                                 <div class="col-sm-10">
-                                    <textarea class="form-control" rows="2"
-                                              placeholder="问题">{{ obj.caption }}</textarea>
+                                    <textarea class="form-control textarea" rows="2"
+                                              placeholder="问题" >{{ obj.caption }}</textarea>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="col-sm-2 control-label">类型：</label>
                                 <div class="col-sm-6">
-                                    <select size="1" class="form-control selector " >
+                                    <select size="1" class="form-control selector" >
                                         {% for type in type_list %}
                                             {% if obj.types == type.id %}
                                                 <option selected value="{{ type.id }}">{{ type.type }}</option>
@@ -44,29 +58,27 @@
                                     </select>
                                 </div>
                                 {% if obj.types == 2 %}
-                                    <span class="glyphicon glyphicon-plus"
+                                    <span class="glyphicon glyphicon-plus addoption"
                                           style="color: #2e6da4;line-height: 28px">添加选项</span>
                                 {% endif %}
                             </div>
                             {% if obj.types == 2 %}
-                                <div class="form-group">
+                            <div class="form-group">
                                     <label class="col-sm-2 control-label">选项：</label>
                                     <div class="col-sm-10">
-
+                                    <ul>
                                         {% for option in obj.option_set.all %}
-                                            <ul>
-                                                <li>
+
+                                                <li option_id="{{ option.id }}">
                                                     <label class="col-sm-2 control-label">内容：</label>
-                                                    <input type="text" class="col-sm-3" placeholder="内容"
-                                                           value="{{ option.name }}">
+                                                    <input type="text" class="col-sm-3 content" placeholder="内容" value="{{ option.name }}">
                                                     <label class="col-sm-2 control-label">分值：</label>
-                                                    <input type="text" class="col-sm-3" placeholder="分值"
-                                                           value="{{ option.score }}">
-                                                    <span class="glyphicon glyphicon-remove"
-                                                          style="font-size: 18px;color: #cccccc;line-height: 28px;margin-left: 20px"></span>
+                                                    <input type="text" class="col-sm-3 score" placeholder="分值" value="{{ option.score }}">
+                                                    <span class="glyphicon glyphicon-remove deloption" style="font-size: 18px;color: #cccccc;line-height: 28px;margin-left: 20px"></span>
                                                 </li>
-                                            </ul>
+
                                         {% endfor %}
+                                      </ul>
                                     </div>
                                 </div>
                             {% endif %}
@@ -78,19 +90,170 @@
     </div>
 
 </div>
+<div class="info" username="{{ questionnaire.creator.username }}" grade_id="{{ questionnaire.grade.id }}" questionnaire_id="{{ questionnaire.id }}"></div>
 </body>
 <script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
 <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.js"></script>
 <script src="https://cdn.bootcss.com/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+<script src="/static/sweet/sweetalert2.min.js"></script>
 <script>
-$(".selector").change(function () {
-    var selector=$(this).val();
-    console.log(selector);
-    if (selector == "2"){
-      var netspan= '<span class="glyphicon glyphicon-plus"style="color: #2e6da4;line-height: 28px">添加选项</span>';
-      $(this).parent().parent().append(netspan);
-        console.log($(this).parent().next())
+{#    选项改变#}
+$(document).on("change",".selector",function () {
+    var selectors=$(this).val();
+    if (selectors == "2"){
+        var netspan= '<span class="glyphicon glyphicon-plus addoption"style="color: #2e6da4;line-height: 28px">添加选项</span>';
+        var option='<div class="form-group"> ' +
+            '<label class="col-sm-2 control-label">选项：</label> ' +
+            '<div class="col-sm-10">'+
+                '<ul>' +
+                    ' <li option_id="None">' +
+{#                    ' <li >' +#}
+                    ' <label class="col-sm-2 control-label">内容：</label> ' +
+                    '<input type="text" class="col-sm-3 content" placeholder="内容"value="">'+
+                    '<label class="col-sm-2 control-label">分值：</label>' +
+                    ' <input type="text" class="col-sm-3 score" placeholder="分值" value=""> '+
+                    ' <span class="glyphicon glyphicon-remove" style="font-size: 18px;color: #cccccc;line-height: 28px;margin-left: 20px"></span> ' +
+                    '</li> ' +
+                 '</ul></div> </div> ';
+        $(this).parent().parent().append(netspan);
+        $(this).parent().parent().parent().append(option);
+    }else{
+        $(this).parent().next().remove();
+        $(this).parent().parent().next().remove()
+
     }
-})
+
+});
+{#添加选项#}
+$(document).on("click",".addoption",function () {
+        var options='<li>' +
+                    ' <label class="col-sm-2 control-label ">内容：</label> ' +
+                    '<input type="text" class="col-sm-3 content" placeholder="内容">'+
+                    '<label class="col-sm-2 control-label">分值：</label>' +
+                    ' <input type="text" class="col-sm-3 score" placeholder="分值" > '+
+                    ' <span class="glyphicon glyphicon-remove deloption" style="font-size: 18px;color: #cccccc;line-height: 28px;margin-left: 20px"></span> ' +
+                    '</li>';
+        $(this).parent().next().children().children().append(options)
+    });
+{#删除问题#}
+ var username=$(".info").attr("username");
+    var questionnaire_id=$(".info").attr("questionnaire_id");
+    var grade_id=$(".info").attr("grade_id");
+$(document).on("click",".delquestion",function () {
+    var question_id=$(this).parent().attr("quest_id");
+    var ss=$(this);
+    $.ajax({
+        url:'/student/'+username+'/'+grade_id+'/del/'+questionnaire_id,
+        type:"post",
+        headers: {"X-CSRFToken": $.cookie('csrftoken')},
+        data:{question_id:question_id},
+        success:function (data) {
+            var datas=JSON.parse(data);
+            if (datas.is_success){
+                ss.parent().remove()
+            }
+
+
+        }
+
+    });
+
+});
+{#删除选项#}
+$(document).on("click",".deloption",function () {
+    var option_id=$(this).parent().attr("option_id");
+    var ss=$(this);
+    $.ajax({
+        url:'/student/'+username+'/'+grade_id+'/deloption/'+questionnaire_id,
+        type:"post",
+        headers: {"X-CSRFToken": $.cookie('csrftoken')},
+        data:{option_id:option_id},
+        success:function (data) {
+            var datas=JSON.parse(data);
+            if (datas.is_success){
+                ss.parent().remove()
+            }
+
+
+        }});
+});
+{#添加问题#}
+$(document).on("click",".addquestion",function () {
+    ss=' <div class="question" quest_id="None" >'+
+        '<span class="glyphicon glyphicon-remove delquestion" style="line-height: 28px;float: right"></span>' +
+        ' <h3></h3>' +
+        '<div class="form-group">' +
+            ' <label class="col-sm-2 control-label">问题：</label>' +
+            ' <div class="col-sm-10">' +
+                ' <textarea class="form-control textarea" rows="2"placeholder="问题" ></textarea>'+
+             '</div>' +
+        ' </div>' +
+        ' <div class="form-group">' +
+            ' <label class="col-sm-2 control-label">类型：</label> ' +
+            '<div class="col-sm-6">' +
+                ' <select size="1" class="form-control selector" >' +
+                     ' <option selected value="1">打分</option>' +
+                    ' <option value="2">单选</option>' +
+                     '<option value="3">评价</option>' +
+                ' </select>' +
+            ' </div>' +
+        '</div>' +
+    ' </div>';
+    $(".quest_list").append(ss)
+    });
+{#保存#}
+        $(document).on("click",".condtion",function () {
+     quest_list=[];
+    $(".quest_list>.question").each(function () {
+         var questions_id=$(this).attr("quest_id");
+         var quest_caption=$(this).find(".textarea").val();
+         var quest_type=$(this).find(".selector").val();
+
+         options=[];
+         if (quest_type == 2){
+         $(this).find("li").each(function () {
+
+             var opp_id=$(this).attr("option_id");
+             var content=$(this).find(".content").val();
+             var score=$(this).find(".score").val();
+             options.push({"opp_id":opp_id,"content":content,"score":score})
+
+         });
+         }
+         if (quest_type == 2){
+             quest_list.push({"questions_id":questions_id,"quest_caption":quest_caption,"quest_type":quest_type,"options":options})
+         }else{
+             quest_list.push({"questions_id":questions_id,"quest_caption":quest_caption,"quest_type":quest_type})
+
+         }
+
+    });
+
+    $.ajax({
+        url:'/student/'+username+'/'+grade_id+'/edit/'+questionnaire_id,
+        type:'post',
+        data: JSON.stringify(quest_list),
+        headers: {"X-CSRFToken": $.cookie('csrftoken')},
+        contentType:"application/json",
+        success:function(data){
+           var data=JSON.parse(data);
+           if (data.is_success){
+                swal(
+                  'Oops...',
+                  'Something went wrong!',
+                  'ok'
+                    )
+           }else{
+               $(".error").text(data.error);
+               setTimeout(function () {
+                            $('.error').text('')
+                        }, 1000)
+           }
+        }
+
+    })
+
+
+    });
 </script>
 </html>
