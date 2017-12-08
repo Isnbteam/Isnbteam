@@ -82,6 +82,7 @@ class Answer(models.Model):
     question = models.ForeignKey(to=Question,verbose_name="问题")
 
     val = models.IntegerField(null=True,blank=True)
+    option=models.ForeignKey("Option",null=True,blank=True)
     content = models.CharField(max_length=255,null=True,blank=True)
     class Meta:
         verbose_name_plural="回答"

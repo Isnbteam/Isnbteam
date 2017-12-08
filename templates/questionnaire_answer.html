@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/static/bootstrap.min.css">
+    <title>问卷调查</title>
+</head>
+<body>
+<h2 class="text-center">问卷调查</h2>
+<div class="container">
+    <form method="post">
+        {% csrf_token %}
+    {% for fd in form %}
+        <h3>{{ fd.label }}{{ fd.errors.0 }}</h3>
+        <p>{{ fd }}</p>
+        {% endfor %}
+    </form>
+</div>
+</body>
+</html>

@@ -2,7 +2,9 @@ from django.shortcuts import render,redirect,HttpResponse
 from app import models
 from django.db.models import Count
 import json
-from app.QuestionForm import QuestionForm
+from django.forms import Form
+from  django.forms import fields
+from django.forms import widgets
 # Create your views here.
 def login(request):
     if request.method=="GET":
@@ -12,20 +14,20 @@ def login(request):
         password=request.POST.get("password")
         user_obj=models.Userinfo.objects.filter(username=username,password=password)
         if user_obj:
-            request.session["user"]=username
+            request.session["user"]={"user":username}
             return redirect("/questionnaire/")
         else:pass
 def student_login(request):
     if request.method=="GET":
-        return render(request,"login.html")
+        return render(request,"student_login.html")
     else:
         username=request.POST.get("username")
         password=request.POST.get("password")
-        user_obj=models.Student.objects.filter(username=username,password=password)
+        user_obj=models.Student.objects.filter(username=username,password=password).first()
         if user_obj:
-            request.session["user"]={"user":username,"id":user_obj.id}
+            request.session["user"]={"user":user_obj.username,"id":user_obj.id}
             return redirect("/see_questionnaire/")
-        else:pass
+
 def question(request):
     """
     问题列表
@@ -45,7 +47,7 @@ def questionnaire(request):
     :return:
     """
     user = request.session.get("user")
-    if models.Userinfo.objects.filter(username=user):
+    if models.Userinfo.objects.filter(username=user["user"]):
         if request.method == "GET":
             class Foo(object):
                 def __init__(self, data):
@@ -131,13 +133,55 @@ def edit_questionnaire(request,username,grade_id,questionnaire_id):
                                                    questionnaire_id=questionnaire_id)
         response["is_success"]=True
         return HttpResponse("ok")
-def see_questionnaire(request,username,grade_id,questionnaire_id):
+def see_questionnaire(request,grade_id,questionnaire_id):
     """
     问卷发布内容
     :param request:
     :return:
     """
-    pass
+    user_id=request.session["user"]["id"]
+    #判断是不是本班学生
+
+    if  not models.Student.objects.filter(id=user_id,grade_id=grade_id):
+        return HttpResponse("你是不是想转班？")
+    #判断是不是已经作答
+    if models.Answer.objects.filter(student_id=user_id,question__questionnaire_id=questionnaire_id):
+        return HttpResponse("你已经答过了！")
+    #列出问题
+    question_list=models.Question.objects.filter(questionnaire_id=questionnaire_id)
+    question_dict={}
+    for question in question_list:
+        if question.types==1:
+            question_dict["val_%s" % question.id]=fields.ChoiceField(
+                label=question.caption,
+                required=True,
+                choices=[(i,i)for i in range(1,11)],
+                error_messages={"required":"不能为空！"},
+                widget=widgets.RadioSelect
+            )
+        elif question.types==2:
+            question_dict["option_id_%s" % question.id] = fields.ChoiceField(
+                required=True,
+                label=question.caption,
+                error_messages={"required": "不能为空！"},
+                widget=widgets.RadioSelect,
+                choices=models.Option.objects.filter(qs_id=question.id).values_list("id","name")
+            )
+        elif question.types==3:
+            question_dict["content_id_%s" % question.id] = fields.CharField(
+                required=True,
+                label=question.caption,
+                min_length=15,
+                error_messages={"required": "不能为空！","min_length":"至少15字!"},
+                widget=widgets.Textarea
+            )
+
+        else:return HttpResponse("滚一边去！")
+    QuestionForm=type("QuestionForm",(Form,),question_dict)
+    form=QuestionForm()
+    if request.method=="GET":
+        return render(request,"questionnaire_answer.html",{"form":form})
+    else:pass
 def del_questionnaire(request,username,grade_id,questionnaire_id):
     question_id=request.POST.get("question_id")
     obj=models.Question.objects.filter(id=question_id)
