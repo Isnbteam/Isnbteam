@@ -14,7 +14,7 @@ def login(request):
         password=request.POST.get("password")
         user_obj=models.Userinfo.objects.filter(username=username,password=password)
         if user_obj:
-            request.session["user"]={"user":username}
+            request.session["user"]={"user":username,"id":None}
             return redirect("/questionnaire/")
         else:pass
 def student_login(request):
@@ -26,7 +26,9 @@ def student_login(request):
         user_obj=models.Student.objects.filter(username=username,password=password).first()
         if user_obj:
             request.session["user"]={"user":user_obj.username,"id":user_obj.id}
-            return redirect("/see_questionnaire/")
+            grade_id=user_obj.grade_id
+            questionnaire_id=user_obj.grade.questionnaire_set.first().id
+            return redirect("/student/%s/%s/"%(grade_id,questionnaire_id))
 
 def question(request):
     """
@@ -139,7 +141,8 @@ def see_questionnaire(request,grade_id,questionnaire_id):
     :param request:
     :return:
     """
-    user_id=request.session["user"]["id"]
+    user_id=request.session.get("user").get("id")
+
     #判断是不是本班学生
 
     if  not models.Student.objects.filter(id=user_id,grade_id=grade_id):
@@ -168,7 +171,7 @@ def see_questionnaire(request,grade_id,questionnaire_id):
                 choices=models.Option.objects.filter(qs_id=question.id).values_list("id","name")
             )
         elif question.types==3:
-            question_dict["content_id_%s" % question.id] = fields.CharField(
+            question_dict["content_%s" % question.id] = fields.CharField(
                 required=True,
                 label=question.caption,
                 min_length=15,
@@ -181,8 +184,22 @@ def see_questionnaire(request,grade_id,questionnaire_id):
     form=QuestionForm()
     if request.method=="GET":
         return render(request,"questionnaire_answer.html",{"form":form})
-    else:pass
+    else:
+        form=QuestionForm(request.POST)
+        if form.is_valid():
+            objs=[]
+            # {'option_id_1': '7', 'option_id_3': '1', 'val_4': '1', 'content_id_6': '一个很6666666666666666的人'}
+            print(form.cleaned_data)
+            for k,y in form.cleaned_data.items():
+                types,question_id=k.rsplit("_",1)
+                answer_dict={"student_id":user_id,"question_id":question_id,types:y}
+                objs.append(models.Answer(**answer_dict))
+            models.Answer.objects.bulk_create(objs)
+            return HttpResponse("感谢您的参与！")
+        else:
+            return render(request,"questionnaire_answer.html",{"form":form})
 def del_questionnaire(request,username,grade_id,questionnaire_id):
+    #删除问题
     question_id=request.POST.get("question_id")
     obj=models.Question.objects.filter(id=question_id)
     response={}
@@ -194,6 +211,7 @@ def del_questionnaire(request,username,grade_id,questionnaire_id):
         response["is_success"] = True
         return HttpResponse(json.dumps(response))
 def del_question(request,username,grade_id,questionnaire_id):
+    #删除选项
     option_id=request.POST.get("option_id")
     obj=models.Option.objects.filter(id=option_id)
     response = {}

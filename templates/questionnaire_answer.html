@@ -6,16 +6,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="/static/bootstrap.min.css">
     <title>问卷调查</title>
+    <style>
+
+        ul>li{
+            display: inline-block;
+        }
+
+    </style>
 </head>
 <body>
 <h2 class="text-center">问卷调查</h2>
 <div class="container">
-    <form method="post">
+    <form method="post" class="col-md-5 col-lg-offset-2" novalidate>
         {% csrf_token %}
     {% for fd in form %}
-        <h3>{{ fd.label }}{{ fd.errors.0 }}</h3>
-        <p>{{ fd }}</p>
+        <h4 class="">{{ fd.label }}
+          {{ fd }}</h4>
+        <span style="color: #a30000">{{ fd.errors.0 }}</span>
         {% endfor %}
+<p>    <input type="submit" value="提交">
+</p>
     </form>
 </div>
 </body>

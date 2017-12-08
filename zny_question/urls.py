@@ -22,7 +22,6 @@ urlpatterns = [
 
     url(r'^login/', views.login),
     url(r'^questionnaire/', views.questionnaire),
-    url(r'^see_questionnaire/', views.see_questionnaire),
     url(r'^question/', views.question),
     url(r'^student/',include('app.urls'))
 ]
